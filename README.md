@@ -1,51 +1,86 @@
-# CommonLibSSE-NG Plugin Template
+# KeyBindManager
 
-This is a basic plugin template using CommonLibSSE-NG.
+`KeyBindManager` is an SKSE plugin for Skyrim SE 1.5.97 that adds an in-game PrismaUI menu for binding powers, lesser powers, voice powers, and shout-like talents to keyboard or mouse hotkeys.
 
-### Requirements
-* [XMake](https://xmake.io) [3.0.0+]
-* C++23 Compiler (MSVC, Clang-CL)
+Version: `0.1.0`
 
-## Getting Started
-```bat
-git clone --recurse-submodules https://github.com/libxse/commonlibsse-ng-template
-cd commonlibsse-ng-template
-```
+## Features
 
-### Build
-To build the project, run the following command:
+- In-game PrismaUI menu opened with a configurable hotkey.
+- Bind talents to keyboard keys or mouse buttons.
+- Support for modifier combos like `Shift + Q`, `Ctrl + Mouse4`, or `Alt + R`.
+- Rebind the menu hotkey with conflict protection.
+- Persist bindings to `SKSE/Plugins/KeyBindManager.ini`.
+- Lazy PrismaUI initialization to avoid early-load crashes.
+
+## Current Behavior
+
+- The default menu hotkey is `F3`.
+- The menu hotkey can be changed in the UI and reset back to `F3`.
+- `Esc` and pure modifier keys cannot be used as the menu hotkey.
+- The menu hotkey cannot conflict with a talent's primary key.
+- While binding:
+  - press a normal key for a single-key bind
+  - press `Shift`, `Ctrl`, or `Alt`, then a second key for a combo
+  - press `Esc` to cancel
+
+## Requirements
+
+- Skyrim Special Edition `1.5.97`
+- SKSE64
+- [XMake](https://xmake.io/)
+- MSVC with C++23 support
+- PrismaUI runtime
+
+## Repository Layout
+
+- `src/` - plugin source
+- `view/index.html` - PrismaUI frontend
+- `vendor/PrismaUI/` - vendored PrismaUI runtime files used for local deployment
+- `xmake.lua` - build and deployment config
+
+## Build
+
 ```bat
 xmake build
 ```
 
-> ***Note:*** *This will generate a `build/windows/` directory in the **project's root directory** with the build output.*
+The project is configured to deploy directly into a local MO2 mod folder after a successful build.
 
+## Local Setup
 
-### Build Output (Optional)
-If you want to redirect the build output, set one of the following environment variables:
+This repository currently uses hardcoded local paths inside `xmake.lua`. Before building on another machine, update these variables:
 
-- Path to a Mod Manager mods folder: `XSE_TES5_MODS_PATH`
+- `mod_root`
+- `prisma_mod_root`
+- any derived plugin or view paths if your layout is different
 
-  or
+The current setup copies:
 
-- Path to a Skyrim install folder: `XSE_TES5_GAME_PATH`
+- `KeyBindManager.dll` into the target mod's `SKSE/Plugins`
+- PrismaUI runtime files from `vendor/PrismaUI`
+- the UI view from `view/index.html`
 
-**Alternatively**, use the [set_installdir](https://xmake.io/api/description/project-target.html#set-installdir) api to set a specific install path instead, either globally or per target. By default, your plugin `.dll` and `.pdb` are included, but you can *add* more files to be installed by using the [add_installfiles](https://xmake.io/api/description/project-target.html#add-installfiles) api.
+## Configuration
 
-### Project Generation (Optional)
-If you use Visual Studio, run the following command:
-```bat
-xmake project -k vsxmake
+Runtime config is stored in:
+
+```text
+SKSE/Plugins/KeyBindManager.ini
 ```
 
-> ***Note:*** *This will generate a `vsxmakeXXXX/` directory in the **project's root directory** using the latest version of Visual Studio installed on the system.*
+The plugin stores:
 
-**Alternatively**, if you do not use Visual Studio, you can generate a `compile_commands.json` file for use with a laguage server like clangd in any code editor that supports it, like vscode:
-```bat
-xmake project -k compile_commands
-```
+- talent bindings
+- display labels
+- menu hotkey
 
-> ***Note:*** *You must have a language server extension installed to make use of this file. I recommend `clangd`. Do not have more than one installed at a time as they will conflict with each other. I also recommend installing the `xmake` extension if available to make building the project easier.*
+## Notes
 
-## Documentation
-Please refer to the [Wiki](../../wiki/Home) for more advanced topics.
+- PrismaUI is initialized on first menu use instead of during early SKSE startup.
+- Old binding data with the legacy modifier format is migrated on load.
+- The repository includes vendored PrismaUI runtime assets so the build can deploy a working local setup.
+
+## License
+
+GPL-3.0
