@@ -75,6 +75,11 @@ The plugin stores:
 - display labels
 - menu hotkey
 
+## Third-Party Components
+
+- `vendor/PrismaUI/` is a vendored third-party dependency and is not automatically covered by the repository root MIT license.
+- See `THIRD_PARTY.md` for attribution and licensing notes for PrismaUI and embedded dependencies.
+
 ## Notes
 
 - PrismaUI is initialized on first menu use instead of during early SKSE startup.
@@ -83,4 +88,6 @@ The plugin stores:
 
 ## License
 
-GPL-3.0
+MIT for the original `KeyBindManager` code and project files.
+
+Third-party content under `vendor/PrismaUI/` remains under its own upstream terms and notices.

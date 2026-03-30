@@ -15,7 +15,7 @@ local prisma_ui_dll = path.join(os.scriptdir(), "vendor", "PrismaUI", "PrismaUI.
 -- set project constants
 set_project("KeyBindManager")
 set_version("0.1.0")
-set_license("GPL-3.0")
+set_license("MIT")
 set_languages("c++23")
 set_warnings("allextra")
 
