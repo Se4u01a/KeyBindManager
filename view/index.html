@@ -1,0 +1,431 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyBindManager</title>
+    <style>
+        :root {
+            --bg: rgba(8, 12, 18, 0.88);
+            --panel: rgba(22, 29, 38, 0.96);
+            --panel-strong: rgba(30, 40, 52, 0.98);
+            --line: rgba(255, 214, 122, 0.22);
+            --accent: #f1c76a;
+            --accent-strong: #ffdd97;
+            --text: #f2eee7;
+            --muted: #b5b9c3;
+            --good: #8fd8a5;
+            --danger: #ff8b7f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            color: var(--text);
+            background: transparent;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(circle at top, rgba(255, 214, 122, 0.10), transparent 35%),
+                radial-gradient(circle at bottom, rgba(68, 108, 146, 0.18), transparent 45%),
+                transparent;
+        }
+
+        .shell {
+            width: min(1100px, calc(100vw - 48px));
+            height: min(760px, calc(100vh - 48px));
+            display: grid;
+            grid-template-rows: auto auto auto auto 1fr;
+            gap: 16px;
+            padding: 22px;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: var(--bg);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 34px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent-strong);
+        }
+
+        .subtitle {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .pill {
+            padding: 8px 12px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--accent-strong);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .toolbar,
+        .tabs-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font-size: 15px;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #f1c76a, #c89235);
+            color: #1d1406;
+        }
+
+        .status {
+            min-height: 20px;
+            color: var(--good);
+            font-size: 13px;
+        }
+
+        .list {
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+        }
+
+        .card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            padding: 16px 18px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+        }
+
+        .card.waiting {
+            border-color: rgba(255, 221, 151, 0.55);
+            box-shadow: 0 0 0 1px rgba(255, 221, 151, 0.25);
+        }
+
+        .name {
+            margin: 0 0 6px;
+            font-size: 18px;
+        }
+
+        .meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .bind-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .binding {
+            min-width: 118px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: var(--panel-strong);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            font-size: 14px;
+            color: var(--accent-strong);
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.12s ease, opacity 0.12s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .primary {
+            background: linear-gradient(135deg, #f1c76a, #c89235);
+            color: #1d1406;
+            font-weight: 700;
+        }
+
+        .ghost {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+        }
+
+        .danger {
+            background: rgba(255, 139, 127, 0.15);
+            color: var(--danger);
+        }
+
+        .empty {
+            display: none;
+            padding: 28px;
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            text-align: center;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.04);
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="header">
+            <div>
+                <h1 class="title">KeyBindManager</h1>
+                <p class="subtitle">Нажми клавишу меню, выбери талант и назначь ему удобную клавишу.</p>
+            </div>
+            <div class="header-actions">
+                <div class="pill" id="menu-key">Меню: F3</div>
+                <button class="ghost" id="menu-key-button" onclick="beginMenuKeyRebind()">Сменить</button>
+                <button class="ghost" onclick="resetMenuKey()">Сбросить</button>
+            </div>
+        </section>
+
+        <section class="toolbar">
+            <input class="search" id="search" type="text" placeholder="Поиск по названию">
+            <div class="hint">Клавиша меню не должна конфликтовать с хоткеями талантов</div>
+        </section>
+
+        <section class="tabs-row">
+            <div class="hint">Для комбинации нажми Shift, Ctrl или Alt, затем основную клавишу.</div>
+            <div class="tabs" id="tabs"></div>
+        </section>
+
+        <div class="status" id="status"></div>
+        <section class="empty" id="empty-state">Подходящих талантов не найдено.</section>
+        <section class="list" id="talent-list"></section>
+    </main>
+
+    <script>
+        const state = {
+            talents: [],
+            filter: "",
+            waitingForMenuKey: false,
+            waitingForTalentId: null,
+            activeTab: "Talents"
+        };
+
+        const TAB_LABELS = {
+            Talents: "Таланты"
+        };
+
+        const elements = {
+            list: document.getElementById("talent-list"),
+            status: document.getElementById("status"),
+            search: document.getElementById("search"),
+            empty: document.getElementById("empty-state"),
+            menuKey: document.getElementById("menu-key"),
+            menuKeyButton: document.getElementById("menu-key-button"),
+            tabs: document.getElementById("tabs")
+        };
+
+        function postToPlugin(message) {
+            if (typeof sendDataToSKSE === "function") {
+                sendDataToSKSE(message);
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;");
+        }
+
+        function render() {
+            const filter = state.filter.trim().toLowerCase();
+            const visibleTalents = state.talents.filter((talent) => {
+                return talent.categoryLabel === state.activeTab &&
+                    (!filter || talent.name.toLowerCase().includes(filter));
+            });
+
+            elements.tabs.innerHTML = Object.entries(TAB_LABELS).map(([tab, label]) => `
+                <button class="tab ${state.activeTab === tab ? "active" : ""}" onclick="setActiveTab('${tab}')">${escapeHtml(label)}</button>
+            `).join("");
+
+            const cards = visibleTalents.map((talent) => {
+                const waiting = state.waitingForTalentId === talent.id;
+                const bindingLabel = waiting ? "Нажми клавишу..." : (talent.bindingLabel || "Не назначено");
+
+                return `
+                    <article class="card ${waiting ? "waiting" : ""}">
+                        <div>
+                            <h2 class="name">${escapeHtml(talent.name)}</h2>
+                            <div class="meta">
+                                <span>${escapeHtml(talent.typeLabel)}</span>
+                                <span>ID ${escapeHtml(talent.id)}</span>
+                            </div>
+                        </div>
+                        <div class="bind-row">
+                            <div class="binding">${escapeHtml(bindingLabel)}</div>
+                            <button class="primary" onclick="beginRebind('${talent.id}')">${waiting ? "Слушаю..." : "Назначить"}</button>
+                            <button class="ghost" onclick="activateTalent('${talent.id}')">Проверить</button>
+                            <button class="danger" onclick="clearBinding('${talent.id}')">Очистить</button>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+
+            elements.menuKeyButton.textContent = state.waitingForMenuKey ? "Слушаю..." : "Сменить";
+            elements.empty.style.display = cards ? "none" : "block";
+            elements.list.innerHTML = cards;
+        }
+
+        function beginRebind(talentId) {
+            state.waitingForMenuKey = false;
+            state.waitingForTalentId = talentId;
+            elements.status.textContent = "Нажми клавишу для таланта. Для комбинации сначала нажми Shift, Ctrl или Alt, затем основную клавишу.";
+            postToPlugin(`listen_bind:${talentId}`);
+            render();
+        }
+
+        function beginMenuKeyRebind() {
+            state.waitingForTalentId = null;
+            state.waitingForMenuKey = true;
+            elements.status.textContent = "Нажми новую клавишу меню. Esc, Shift, Ctrl и Alt недоступны.";
+            postToPlugin("listen_menu_key");
+            render();
+        }
+
+        function resetMenuKey() {
+            state.waitingForTalentId = null;
+            state.waitingForMenuKey = false;
+            postToPlugin("reset_menu_key");
+        }
+
+        function clearBinding(talentId) {
+            state.waitingForTalentId = null;
+            state.waitingForMenuKey = false;
+            postToPlugin(`unbind:${talentId}`);
+        }
+
+        function activateTalent(talentId) {
+            postToPlugin(`activate:${talentId}`);
+        }
+
+        function setActiveTab(tab) {
+            state.activeTab = tab;
+            render();
+        }
+
+        function handlePluginPayload(payload) {
+            const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+            if (data.type !== "sync") {
+                return;
+            }
+
+            state.talents = Array.isArray(data.talents) ? data.talents : [];
+            state.waitingForMenuKey = false;
+            state.waitingForTalentId = null;
+            if (!state.talents.some((talent) => talent.categoryLabel === state.activeTab)) {
+                state.activeTab = "Talents";
+            }
+
+            elements.menuKey.textContent = `Меню: ${data.menuKey || "F3"}`;
+            elements.status.textContent = data.status || "";
+            render();
+        }
+
+        window.handlePluginPayload = handlePluginPayload;
+        window.beginRebind = beginRebind;
+        window.beginMenuKeyRebind = beginMenuKeyRebind;
+        window.clearBinding = clearBinding;
+        window.activateTalent = activateTalent;
+        window.resetMenuKey = resetMenuKey;
+        window.setActiveTab = setActiveTab;
+
+        elements.search.addEventListener("input", (event) => {
+            state.filter = event.target.value || "";
+            render();
+        });
+    </script>
+</body>
+</html>
+

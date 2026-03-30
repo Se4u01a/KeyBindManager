@@ -1,8 +1,24 @@
-SKSE_PLUGIN_LOAD(const SKSE::LoadInterface* a_skse)
+#include "InputHandler.h"
+#include "RE/Skyrim.h"
+#include "SKSE/SKSE.h"
+#include "UIManager.h"
+
+void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 {
-	SKSE::Init(a_skse);
+    if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+        SKSE::log::info("Received SKSE kDataLoaded message, initializing input and deferring PrismaUI until first use.");
+        InputHandler::SetupInput();
+    }
+}
 
-	logs::info("Hello World!");
+SKSEPluginLoad(const SKSE::LoadInterface* skse)
+{
+    SKSE::Init(skse);
+    SKSE::log::info("KeyBindManager plugin load started.");
 
-	return true;
+    auto* messaging = SKSE::GetMessagingInterface();
+    messaging->RegisterListener(SKSEMessageHandler);
+    SKSE::log::info("Registered SKSE message listener.");
+
+    return true;
 }
